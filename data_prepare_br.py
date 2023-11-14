@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Tue Apr 25 23:52:27 2023
+Created:    Tue Apr 25 23:52:27 2023
+Updated:    11/14/2023
 
 @author: zahid + matthew
 
@@ -305,10 +306,10 @@ def butter_lowpass_filter(data, cutoff, fs, order):
 
 
 #%% Analyze data
-fraction = 3 # split current video sample length
+fraction = 3 # split video sample length so we start 1/3 into video (filter beginning out)
 samp_size_start = data.shape[0] // fraction
-timeframe_samp = 2000 # no. of frames examined
-samp_rate = 1 # frequency (frame gap, i.e., check every "5" frames)
+timeframe_samp = data.shape[0] # no. of frames examined
+samp_rate = 2 # frequency (frame gap, i.e., check every "5" frames)
 
 print(data.shape, samp_size_start, timeframe_samp)
 
@@ -317,12 +318,16 @@ print(data.shape, samp_size_start, timeframe_samp)
 
 data_diff = []
 diff_frame = 2
-d_range_adjustment = 500
+
 # calculate a data set for data with differences between its nearest 
 # neighboring (diff_frame) frames
-for i in range(data.shape[0] - d_range_adjustment):
+for i in range(data.shape[0]):
+    # print(i + diff_frame, data.shape[0])
+    if (i + diff_frame >= data.shape[0]):
+        break
     data_diff.append(data[i + diff_frame] - data[i])
     
+# make into numpy array
 data_diff = np.array(data_diff)
 
 def row_col_analyze(data_axis):
@@ -339,12 +344,17 @@ def row_col_analyze(data_axis):
     arr_diff = []
 
     # append data samples of max row/col/sum val at particular frame
+    # pick min val of data sizes to sample from (don't go out of range!)
+    sample_range = min(timeframe_samp, len(data_summed), len(data_summed_diff))
+    print(sample_range)
+    
     for i in range(timeframe_samp):
-        if ((samp_size_start + i * samp_rate) >= data.shape[0]):
+        if ((samp_size_start + i * samp_rate) >= sample_range):
             break
         arr.append(np.argmax(data_summed[samp_size_start + i * samp_rate]))
         arr_diff.append(np.argmax(data_summed_diff[samp_size_start + i * samp_rate]))      
 
+    print(len(arr))
     # convert to np arr
     arr = np.array(arr)
     arr_diff = np.array(arr_diff)
@@ -368,9 +378,12 @@ def full_sum_analyze(data_axis):
     arr = []
     arr_diff = []
 
+    # don't go out of range!
+    sample_range = min(timeframe_samp, len(data), len(data_diff))
+
     # append data samples of max sum val at particular frame
     for i in range(timeframe_samp):
-        if ((samp_size_start + i * samp_rate) >= data.shape[0]):
+        if ((samp_size_start + i * samp_rate) >= sample_range):
             break
         arr.append(np.sum(data[samp_size_start + i * samp_rate]))
         arr_diff.append(np.sum(data_diff[samp_size_start + i * samp_rate]))
@@ -417,8 +430,9 @@ filt_and_plot(cs_arr_diff, 2)
 
 
 
-#%% Load CSV file
+#%% Load CSV file 
 
+"""(need developing beyond here!!!)"""
 exit()
 
 import pandas as pd
